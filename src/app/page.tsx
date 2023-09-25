@@ -69,6 +69,7 @@ export default function Home() {
           new Date(),
           new Date(startTimer),
         )
+
         setSecondsPassed(TIME - secondsDifference)
 
         if (secondsDifference >= TIME) {

@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react'
-
 import { CheckCircle2, XCircle } from 'lucide-react'
 import { Button } from './Button'
 
@@ -20,6 +19,51 @@ export const Header: React.FC<HeaderProps> = ({
   userAnswers,
   setUserAnswers,
 }) => {
+  const calculateContrastRatio = (background: string, text: string) => {
+    if (!background || !text) {
+      return 'black'
+    }
+
+    const getLuminance = (color: string) => {
+      const matchResult = color.match(/\d+/g)
+      if (matchResult) {
+        const rgb = matchResult.map(Number)
+        const [r, g, b] = rgb.map((value, index) => {
+          value /= 255
+          value =
+            value <= 0.03928
+              ? value / 12.92
+              : Math.pow((value + 0.055) / 1.055, 2.4)
+          return index === 0
+            ? 0.2126 * value
+            : index === 1
+            ? 0.7152 * value
+            : 0.0722 * value
+        })
+        return r + g + b
+      }
+
+      return 0
+    }
+
+    const backgroundLuminance = getLuminance(background)
+    const textLuminance = getLuminance(text)
+
+    const backgroundLuminanceThreshold = 0.2
+
+    const isDarkBackground = backgroundLuminance < backgroundLuminanceThreshold
+
+    if (isDarkBackground) {
+      return 'white'
+    }
+
+    const contrastRatio =
+      (Math.max(backgroundLuminance, textLuminance) + 0.05) /
+      (Math.min(backgroundLuminance, textLuminance) + 0.05)
+
+    return contrastRatio >= 4.5 ? 'white' : 'black'
+  }
+
   return (
     <div className="h-screen w-96 bg-slate-300 p-3 flex flex-col">
       <div className="flex items-center justify-center mt-3 mb-3">
@@ -38,9 +82,23 @@ export const Header: React.FC<HeaderProps> = ({
               <div className="flex justify-between items-center h-7 w-full mb-4 px-6 ml-10">
                 <div
                   className="p-2 rounded-lg"
-                  style={{ backgroundColor: `${userAnswer.correctAnswer}` }}
+                  style={{
+                    backgroundColor: `${userAnswer.correctAnswer}`,
+                    color: calculateContrastRatio(
+                      userAnswer.correctAnswer,
+                      'white',
+                    ),
+                  }}
                 >
-                  <p className="text-black font-bold">
+                  <p
+                    className="text-black font-bold"
+                    style={{
+                      color: calculateContrastRatio(
+                        userAnswer.correctAnswer,
+                        'white',
+                      ),
+                    }}
+                  >
                     {userAnswer.correctAnswer}
                   </p>
                 </div>
@@ -53,17 +111,45 @@ export const Header: React.FC<HeaderProps> = ({
               <div className="flex justify-between items-center h-7 w-full mb-4 px-6">
                 <div
                   className="p-2 rounded-lg"
-                  style={{ backgroundColor: `${userAnswer.selectedAnswer}` }}
+                  style={{
+                    backgroundColor: `${userAnswer.selectedAnswer}`,
+                    color: calculateContrastRatio(
+                      userAnswer.selectedAnswer,
+                      'white',
+                    ),
+                  }}
                 >
-                  <p className="text-black font-bold">
+                  <p
+                    className="text-black font-bold"
+                    style={{
+                      color: calculateContrastRatio(
+                        userAnswer.selectedAnswer,
+                        'white',
+                      ),
+                    }}
+                  >
                     {userAnswer.correctAnswer}
                   </p>
                 </div>
                 <div
                   className="p-2 rounded-lg ml-2"
-                  style={{ backgroundColor: `${userAnswer.correctAnswer}` }}
+                  style={{
+                    backgroundColor: `${userAnswer.correctAnswer}`,
+                    color: calculateContrastRatio(
+                      userAnswer.correctAnswer,
+                      'white',
+                    ),
+                  }}
                 >
-                  <p className="text-black font-bold">
+                  <p
+                    className="text-black font-bold"
+                    style={{
+                      color: calculateContrastRatio(
+                        userAnswer.correctAnswer,
+                        'white',
+                      ),
+                    }}
+                  >
                     {userAnswer.correctAnswer}
                   </p>
                 </div>

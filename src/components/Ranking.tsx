@@ -10,7 +10,6 @@ interface RankingProps {
 }
 
 export const Ranking: React.FC<RankingProps> = ({ ranking }) => {
-  console.log(ranking)
   return (
     <div className="h-screen w-96 bg-slate-300 p-3 flex flex-col">
       <div className="flex items-center justify-center mt-3 mb-3">
