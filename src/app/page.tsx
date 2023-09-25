@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { differenceInSeconds, setSeconds } from 'date-fns'
+import { differenceInSeconds } from 'date-fns'
 import { Header } from '@/components/Header'
-import { Button } from '@/components/Button'
+import axios from 'axios'
+import { regexValidate } from '@/lib/regex'
+import { Ranking } from '@/components/Ranking'
 
 interface UserAnswersProps {
   correctAnswer: string
@@ -14,6 +16,11 @@ interface UserAnswersProps {
 interface LevelProps {
   nivel: string
   quantityOptions: number
+}
+
+interface RankingProps {
+  name: string
+  score: number
 }
 
 const TIME = 10
@@ -44,8 +51,11 @@ export default function Home() {
   const [playing, setPlaying] = useState<boolean>(false)
   const [startTimer, setStartTimer] = useState<Date>()
   const [secondsPassed, setSecondsPassed] = useState<number>(TIME)
+  const [ranking, setRanking] = useState<RankingProps[]>([])
+  const [player, setPlayer] = useState<string>('')
+  const [highscore, setHighscore] = useState<number>(0)
   const [score, setScore] = useState<number>(0)
-  const [highscore, setHighScore] = useState<number>(0)
+
   const [timeSinceLastQuestion, setTimeSinceLastQuestion] = useState<number>(0)
 
   const refColor = useRef<HTMLDivElement>(null)
@@ -62,7 +72,9 @@ export default function Home() {
         setSecondsPassed(TIME - secondsDifference)
 
         if (secondsDifference >= TIME) {
+          handleSubmitPlayer()
           setPlaying(false)
+          listRanking()
           clearInterval(interval)
         } else {
           setTimeSinceLastQuestion(
@@ -80,6 +92,25 @@ export default function Home() {
       clearInterval(interval)
     }
   }, [score, startTimer, timeSinceLastQuestion])
+
+  const listRanking = async () => {
+    try {
+      const { data } = await axios.get('/api/ranking')
+      let highestScore = 0
+
+      for (let i = 0; i < data.length; i++) {
+        highestScore = Math.max(highestScore, data[i].score)
+      }
+      setHighscore(highestScore)
+      setRanking(data)
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  useEffect(() => {
+    listRanking()
+  }, [])
 
   const getRgb = () => Math.floor(Math.random() * 256)
 
@@ -121,12 +152,17 @@ export default function Home() {
   }
 
   const handleStart = () => {
-    setUserAnswers([])
-    setSecondsPassed(TIME)
-    setPlaying(true)
-    setScore(0)
-    setStartTimer(new Date())
-    nextQuestion()
+    const isNameValid = regexValidate(player)
+    if (!isNameValid) {
+      alert('O nome não pode conter espaços e caracters especiais')
+    } else {
+      setUserAnswers([])
+      setSecondsPassed(TIME)
+      setPlaying(true)
+      setScore(0)
+      setStartTimer(new Date())
+      nextQuestion()
+    }
   }
 
   const handleRestart = () => {
@@ -176,13 +212,24 @@ export default function Home() {
     }
   }, [playing, score, secondsPassed])
 
+  const handleSubmitPlayer = async () => {
+    try {
+      await axios.post('/api/save', {
+        name: player,
+        score,
+      })
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
   return (
     <div className="flex flex-row">
       <Header userAnswers={userAnswers} setUserAnswers={setUserAnswers} />
       <div className="w-full flex items-center flex-col justify-center">
         <h1 className="text-5xl p-8">Guess the Color</h1>
         <div className="flex justify-center items-center flex-col">
-          <h2 className="mb-6">Select the level: </h2>
+          <h2 className="mb-4">Select the level: </h2>
           <div className="w-full flex justify-center rounded-sm mb-5">
             {typeLevel.map((type) => (
               <button
@@ -205,6 +252,17 @@ export default function Home() {
               </button>
             ))}
           </div>
+        </div>
+        <div className="flex items-center justify-center mb-3 flex-col">
+          <h2 className="mb-4">Nome do Jogador: </h2>
+          <input
+            name="player"
+            type="text"
+            placeholder="Nome do Jogador"
+            onChange={(e) => setPlayer(e.target.value)}
+            disabled={playing}
+            className="flex items-start border border-slate-500 rounded-md p-2"
+          />
         </div>
         <div className="w-2/4 h-24 grid grid-cols-3 items-center bg-slate-300 rounded-md border border-black">
           <div className=" flex items-center flex-col">
@@ -268,6 +326,7 @@ export default function Home() {
           </div>
         )}
       </div>
+      <Ranking ranking={ranking} />
     </div>
   )
 }
