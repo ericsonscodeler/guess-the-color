@@ -43,7 +43,6 @@ export default function Home() {
   const [highscore, setHighscore] = useState<number>(0)
   const [score, setScore] = useState<number>(0)
   const [messageNameError, setMessageNameError] = useState<string>('')
-  const [additionalTime, setAdditionalTime] = useState<number>(0)
   const [timeSinceLastQuestion, setTimeSinceLastQuestion] = useState<number>(0)
 
   const refColor = useRef<HTMLDivElement>(null)
