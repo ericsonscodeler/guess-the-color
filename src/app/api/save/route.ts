@@ -10,17 +10,6 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const player: PlayerProps = body
 
-  // const playerExist = await prisma.player.findFirstOrThrow({
-  //   where: {
-  //     name: player.name,
-  //   },
-  // })
-
-  // if (playerExist) {
-  //   return new NextResponse('Player already exists', {
-  //     status: 400,
-  //   })
-  // }
   await prisma.player.create({
     data: player,
   })

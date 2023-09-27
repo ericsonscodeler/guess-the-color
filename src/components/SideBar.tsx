@@ -2,7 +2,6 @@
 
 import React from 'react'
 import { CheckCircle2, XCircle } from 'lucide-react'
-import { Button } from './Button'
 
 interface UserAnswersProps {
   correctAnswer: string
@@ -10,12 +9,12 @@ interface UserAnswersProps {
   timeAnswered: number
 }
 
-interface HeaderProps {
+interface SideBarProps {
   userAnswers?: UserAnswersProps[]
   setUserAnswers: (userAnswers: UserAnswersProps[]) => void
 }
 
-export const Header: React.FC<HeaderProps> = ({
+export const SideBar: React.FC<SideBarProps> = ({
   userAnswers,
   setUserAnswers,
 }) => {
@@ -67,9 +66,9 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <div className="h-screen w-96 bg-slate-300 p-3 flex flex-col">
       <div className="flex items-center justify-center mt-3 mb-3">
-        <h1>Current/Latest Game</h1>
+        <h1 className="text-xl font-bold">Current/Latest Game</h1>
       </div>
-      <div className="flex flex-row items-center justify-center p-6">
+      <div className="flex flex-row items-center justify-center p-6  font-bold">
         <span>Guessed Color</span>
         <span>Correct Color</span>
         <span>Score</span>
@@ -79,7 +78,10 @@ export const Header: React.FC<HeaderProps> = ({
         {userAnswers?.map((userAnswer, index) => (
           <div key={index} className="flex w-full justify-between">
             {userAnswer.correctAnswer === userAnswer.selectedAnswer ? (
-              <div className="flex justify-between items-center h-7 w-full mb-4 px-6 ml-10">
+              <div
+                data-testid="correct"
+                className="flex justify-between items-center h-7 w-full mb-4 px-6 ml-10"
+              >
                 <div
                   className="p-2 rounded-lg"
                   style={{
@@ -108,7 +110,10 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="flex justify-between items-center h-7 w-full mb-4 px-6">
+              <div
+                data-testid="wrong"
+                className="flex justify-between items-center h-7 w-full mb-4 px-6"
+              >
                 <div
                   className="p-2 rounded-lg"
                   style={{
@@ -164,7 +169,14 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="flex justify-center items-center p-12">
-        <Button onClick={() => setUserAnswers([])}>Limpar dados</Button>
+        <button
+          className="bg-indigo-300
+           px-6 py-2 rounded-xl ml-2 text-white text-lg"
+          type="button"
+          onClick={() => setUserAnswers([])}
+        >
+          Limpar dados
+        </button>
       </div>
     </div>
   )

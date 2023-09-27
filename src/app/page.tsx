@@ -1,29 +1,16 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+
 import { differenceInSeconds } from 'date-fns'
-import { Header } from '@/components/Header'
+import { SideBar } from '@/components/SideBar'
 import axios from 'axios'
 import { regexValidate } from '@/lib/regex'
 import { Ranking } from '@/components/Ranking'
+import { LevelProps, UserAnswersProps, RankingProps } from './types'
+import dayjs from 'dayjs'
 
-interface UserAnswersProps {
-  correctAnswer: string
-  selectedAnswer: string
-  timeAnswered: number
-}
-
-interface LevelProps {
-  nivel: string
-  quantityOptions: number
-}
-
-interface RankingProps {
-  name: string
-  score: number
-}
-
-const TIME = 10
+const TIME = 30
 
 const typeLevel = [
   {
@@ -35,7 +22,7 @@ const typeLevel = [
     quantityOptions: 4,
   },
   {
-    nivel: 'Dificío',
+    nivel: 'Difício',
     quantityOptions: 5,
   },
 ]
@@ -55,7 +42,8 @@ export default function Home() {
   const [player, setPlayer] = useState<string>('')
   const [highscore, setHighscore] = useState<number>(0)
   const [score, setScore] = useState<number>(0)
-
+  const [messageNameError, setMessageNameError] = useState<string>('')
+  const [additionalTime, setAdditionalTime] = useState<number>(0)
   const [timeSinceLastQuestion, setTimeSinceLastQuestion] = useState<number>(0)
 
   const refColor = useRef<HTMLDivElement>(null)
@@ -74,15 +62,16 @@ export default function Home() {
 
         if (secondsDifference >= TIME) {
           handleSubmitPlayer()
-          setPlaying(false)
           listRanking()
+          setPlaying(false)
           clearInterval(interval)
         } else {
           setTimeSinceLastQuestion(
             (secondsSinceLastQuestion) => secondsSinceLastQuestion + 1,
           )
+
           if (timeSinceLastQuestion >= 10) {
-            setScore(score - 2)
+            setScore((prevScore) => prevScore - 2)
             nextQuestion()
           }
         }
@@ -92,26 +81,22 @@ export default function Home() {
     return () => {
       clearInterval(interval)
     }
-  }, [score, startTimer, timeSinceLastQuestion])
-
-  const listRanking = async () => {
-    try {
-      const { data } = await axios.get('/api/ranking')
-      let highestScore = 0
-
-      for (let i = 0; i < data.length; i++) {
-        highestScore = Math.max(highestScore, data[i].score)
-      }
-      setHighscore(highestScore)
-      setRanking(data)
-    } catch (err) {
-      console.log(err)
-    }
-  }
+  }, [startTimer, timeSinceLastQuestion])
 
   useEffect(() => {
     listRanking()
-  }, [])
+  }, [playing])
+
+  const listRanking = async () => {
+    const { data } = await axios.get('/api/ranking')
+    let highestScore = 0
+
+    for (let i = 0; i < data.length; i++) {
+      highestScore = Math.max(highestScore, data[i].score)
+    }
+    setHighscore(highestScore)
+    setRanking(data)
+  }
 
   const getRgb = () => Math.floor(Math.random() * 256)
 
@@ -155,7 +140,9 @@ export default function Home() {
   const handleStart = () => {
     const isNameValid = regexValidate(player)
     if (!isNameValid) {
-      alert('O nome não pode conter espaços e caracters especiais')
+      setMessageNameError(
+        'O nome do jogador não pode estar em branco e não pode conter caracteres especiais.',
+      )
     } else {
       setUserAnswers([])
       setSecondsPassed(TIME)
@@ -191,14 +178,10 @@ export default function Home() {
 
       if (answer === color) {
         setScore((prevScore) => prevScore + 5)
+        setStartTimer(dayjs(startTimer).add(2, 'seconds').toDate())
       } else {
         setScore((prevScore) => prevScore - 1)
-      }
-
-      if (secondsPassed !== 0) {
-        nextQuestion()
-      } else {
-        setPlaying(false)
+        setStartTimer(dayjs(startTimer).subtract(2, 'seconds').toDate())
       }
     }
   }
@@ -209,28 +192,24 @@ export default function Home() {
 
   useEffect(() => {
     if (playing && secondsPassed / 10 === 0) {
-      setScore(score - 2)
+      setScore((prevScore) => prevScore - 2)
     }
   }, [playing, score, secondsPassed])
 
   const handleSubmitPlayer = async () => {
-    try {
-      await axios.post('/api/save', {
-        name: player,
-        score,
-      })
-    } catch (err) {
-      console.log(err)
-    }
+    await axios.post('/api/save', {
+      name: player,
+      score,
+    })
   }
 
   return (
     <div className="flex flex-row">
-      <Header userAnswers={userAnswers} setUserAnswers={setUserAnswers} />
+      <SideBar userAnswers={userAnswers} setUserAnswers={setUserAnswers} />
       <div className="w-full flex items-center flex-col justify-center">
         <h1 className="text-5xl p-8">Guess the Color</h1>
         <div className="flex justify-center items-center flex-col">
-          <h2 className="mb-4">Select the level: </h2>
+          <h2 className="mb-4 font-semibold text-lg">Select the level: </h2>
           <div className="w-full flex justify-center rounded-sm mb-5">
             {typeLevel.map((type) => (
               <button
@@ -241,6 +220,7 @@ export default function Home() {
                 } px-6 py-2 rounded-xl ml-2 text-white text-lg ${
                   playing && 'cursor-not-allowed'
                 }`}
+                data-testid={type.nivel}
                 disabled={playing}
                 onClick={() =>
                   setLevel({
@@ -255,15 +235,20 @@ export default function Home() {
           </div>
         </div>
         <div className="flex items-center justify-center mb-3 flex-col">
-          <h2 className="mb-4">Nome do Jogador: </h2>
           <input
             name="player"
+            data-testid="input-player"
             type="text"
             placeholder="Nome do Jogador"
             onChange={(e) => setPlayer(e.target.value)}
             disabled={playing}
             className="flex items-start border border-slate-500 rounded-md p-2"
           />
+          {messageNameError && (
+            <div data-testid="error-name" className="text-red-500 mt-2">
+              {messageNameError}
+            </div>
+          )}
         </div>
         <div className="w-2/4 h-24 grid grid-cols-3 items-center bg-slate-300 rounded-md border border-black">
           <div className=" flex items-center flex-col">
@@ -302,6 +287,7 @@ export default function Home() {
         {!playing && (
           <button
             type="button"
+            data-testid="button-start"
             className="flex justify-center items-center bg-slate-300 mt-2 rounded-md w-2/4 h-72 text-3xl font-semibold"
             onClick={() => handleStart()}
           >
@@ -314,9 +300,10 @@ export default function Home() {
         />
         {playing && secondsPassed !== 0 && (
           <div className="w-2/4 h-24 mt-10 flex items-center rounded-md border-black">
-            {answers.map((answer) => (
+            {answers.map((answer, index) => (
               <button
                 key={answer}
+                data-testid={`button-answer-${index}`}
                 type="button"
                 className="flex flex-1 items-center justify-center flex-col h-full bg-slate-300 cursor-pointer m-2 rounded-lg hover:bg-slate-400"
                 onClick={() => handleVerifyAnswer(answer)}
