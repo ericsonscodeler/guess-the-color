@@ -2,6 +2,15 @@
 
 Iniciar aplicação
 
+
+Migrate prisma para salvar os score.
+
+```bash
+
+npx prisma migrate dev
+
+```
+
 ```bash
 npm run dev
 # or
@@ -10,14 +19,6 @@ yarn dev
 pnpm dev
 # or
 bun dev
-```
-
-Migrate prisma
-
-```bash
-
-npx prisma migrate dev
-
 ```
 
 Visualizar dados no prisma studio.
