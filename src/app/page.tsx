@@ -244,7 +244,7 @@ export default function Home() {
             disabled={playing}
             className="flex items-start border border-slate-500 rounded-md p-2"
           />
-          {messageNameError && (
+          {messageNameError && !playing && (
             <div data-testid="error-name" className="text-red-500 mt-2">
               {messageNameError}
             </div>

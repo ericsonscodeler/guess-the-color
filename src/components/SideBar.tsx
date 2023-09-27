@@ -171,7 +171,7 @@ export const SideBar: React.FC<SideBarProps> = ({
       <div className="flex justify-center items-center p-12">
         <button
           className="bg-indigo-300
-           px-6 py-2 rounded-xl ml-2 text-white text-lg"
+           px-6 py-2 rounded-xl ml-2 text-white text-lg hover:bg-indigo-500"
           type="button"
           onClick={() => setUserAnswers([])}
         >
