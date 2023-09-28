@@ -29,3 +29,11 @@ npx prisma studio
 
 ```
 
+Rodar os testes unitários
+
+```bash
+
+npm run test
+
+```
+
