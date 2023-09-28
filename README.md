@@ -1,7 +1,5 @@
 ## Getting Started
 
-Iniciar aplicação
-
 
 Migrate prisma para salvar os score.
 
@@ -10,6 +8,8 @@ Migrate prisma para salvar os score.
 npx prisma migrate dev
 
 ```
+
+Iniciar aplicação
 
 ```bash
 npm run dev
